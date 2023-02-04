@@ -28,7 +28,7 @@ contains
     end do
     if (i==MAX_TRY+1) error stop 'day 4 - not found'
     print '("Answer 4/1 ",i0,l2)', ans1, ans1==117946
-    print '("Answer 4/2 ",i0,l2)', ans2, ans2==117946
+    print '("Answer 4/2 ",i0,l2)', ans2, ans2==3938038
   end subroutine day1504
 
 end module day1504_mod
