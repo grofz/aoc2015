@@ -19,7 +19,7 @@ contains
       if (isdigit(line(1)%str(i:i))) then
         num = scan_the_digit(line(1)%str, i)
         ans1 = ans1 + num
-print *, i, num
+!print *, i, num
       else
         i = i + 1
       end if
