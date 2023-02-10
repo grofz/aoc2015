@@ -1,9 +1,9 @@
 module day1513_mod
   use parse_mod, only : string_t, read_strings, split
   use permutation_mod, only : permutation_generator_t
+  use day1509_mod, only : add_name => add_city, &
+  &  MAXNAMELEN => MAXCITYNAMELEN, find_name_index => find_city_index
   implicit none
-
-  integer, parameter :: MAXNAMELEN = 8 
 
 contains
 
@@ -19,7 +19,6 @@ contains
     logical :: is_valid
 
     lines = read_strings(file)
-    !lines = read_strings('inp/13/test.txt')
 
     ! Make array of names
     allocate(names(0))
@@ -39,47 +38,48 @@ contains
       mat(j(1),j(2)) = hapiness
     end do
 
-    ! Test permutations and record the shortest/longest route
+    ! Test permutations and record the largest happiness
     allocate(order(size(names)))
     order = [(i, i=1, size(names))]
     call perm%init(order)
-    ans1 = -huge(ans1) ! maximum hapiness
-!   ans2 = 0          ! maximum distance
+    ans1 = -huge(ans1) 
+    ans2 = -huge(ans1) 
     do
       call perm%next(order, is_valid)
       if (.not. is_valid) exit
-      hapiness = total_hapiness(order, mat)
-if (hapiness>500) print ('(*(i0,1x))'), hapiness, order
+      hapiness = total_hapiness(order, mat, 1)
       if (hapiness > ans1) ans1 = hapiness
-     !if (distance > ans2) ans2 = distance
+      hapiness = total_hapiness(order, mat, 2)
+      if (hapiness > ans2) ans2 = hapiness
     end do
 
-do i=1,size(names)
-  print '(a,3x,*(i3,1x))', names(i), mat(i,:)
-end do
-    print '("Answer 13/1 ",i0,l2)', ans1, ans1==1 ! 676-591
+    do i=1,size(names)
+      print '(a,3x,*(i3,1x))', names(i), mat(i,:)
+    end do
+    print '("Answer 13/1 ",i0,l2)', ans1, ans1==664 ! 676-591
+    print '("Answer 13/2 ",i0,l2)', ans2, ans2==640 ! 676-591
   end subroutine day1513
 
 
-  pure integer function total_hapiness(order, mat) result(h)
-    integer, intent(in) :: order(:), mat(:,:)
+  pure integer function total_hapiness(order, mat, imode) result(h)
+    integer, intent(in) :: order(:), mat(:,:), imode
 
-    integer :: i, ileft, iright
+    integer :: i, ileft, iright, hap_left, hap_right
 
     h = 0
     do i=1, size(order)
-      if (i==1) then
-        ileft = order(size(order))
-      else
-        ileft = order(i-1)
-      end if
-      if (i==size(order)) then
-        iright = order(1)
-      else
-        iright = order(i+1)
-      end if
-      !h = h + mat(ileft,i) + mat(iright,i)
-      h = h + mat(i,ileft) + mat(i,iright)
+      ileft = i - 1
+      if (ileft==0) ileft = size(order)
+      iright = i + 1
+      if (iright==size(order)+1) iright = 1
+
+      hap_left = mat(order(i), order(ileft))
+      hap_right = mat(order(i), order(iright))
+
+      if (i==1 .and. imode == 2) hap_left = 0
+      if (i==size(order) .and. imode == 2) hap_right = 0
+
+      h = h + hap_left + hap_right
     end do
   end function total_hapiness
   
@@ -109,43 +109,5 @@ end do
       end select
     end if
   end subroutine parse_line
-
-
-  pure subroutine add_name(newcity, cities)
-    character(len=*), intent(in) :: newcity
-    character(len=MAXNAMELEN), intent(inout), allocatable :: cities(:)
-!
-! Add the city to the table if not already present.
-!
-    integer :: i
-    character(len=MAXNAMELEN), allocatable :: tmp(:)
-
-    ! City will be added only if not already in the array
-    i = find_name_index(newcity, cities)
-    if (i /=0) return 
-
-    allocate(tmp(size(cities)+1))
-    tmp(1:size(cities))(:) = cities
-    tmp(size(cities)+1) = newcity
-    call move_alloc(tmp, cities)
-  end subroutine add_name
-
-
-  pure function find_name_index(city, cities) result(ind)
-    character(len=*), intent(in) :: city
-    character(len=*), intent(in) :: cities(:)
-    integer :: ind
-!
-! Return the position of the city in the array.
-! If city not present, return "0".
-!
-    integer :: i
-
-    do i=1, size(cities)
-      if (city==cities(i)) exit
-    end do
-    ind = i
-    if (i==size(cities)+1) ind = 0
-  end function find_name_index
 
 end module day1513_mod
