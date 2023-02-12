@@ -15,7 +15,7 @@ program main
   use day1516_mod, only : day1516
   implicit none
 
-  goto 16
+  goto 12
   01 call day1501('inp/01/input.txt')
   02 call day1502('inp/02/input.txt')
   03 call day1503('inp/03/input.txt')
