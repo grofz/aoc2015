@@ -12,9 +12,10 @@ program main
   use day1511_mod, only : day1511
   use day1512_mod, only : day1512
   use day1513_mod, only : day1513
+  use day1516_mod, only : day1516
   implicit none
 
-  goto 13
+  goto 16
   01 call day1501('inp/01/input.txt')
   02 call day1502('inp/02/input.txt')
   03 call day1503('inp/03/input.txt')
@@ -28,5 +29,6 @@ program main
   11 call day1511('hepxcrrq')
   12 call day1512('inp/12/input.txt')
   13 call day1513('inp/13/input.txt')
+  16 call day1516('inp/16/input.txt')
 
 end program main
