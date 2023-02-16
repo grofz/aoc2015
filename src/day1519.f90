@@ -20,20 +20,22 @@ contains
     character(len=*), intent(in) :: file
 
     type(string_t), allocatable :: lines(:)
-    type(rule_t), allocatable :: rules(:)
+    type(rule_t), allocatable :: rules(:), revrules(:)
     type(rbtr_t) :: tree
     type(compound_ptr) :: newdat
     character(len=MAX_COMPOUND_LEN) :: molecule
-    integer :: nrule, i, j, ierr, ans1, counter
+    integer :: nrule, i, j, ierr, ans1, counter, ans2
     integer(DAT_KIND), allocatable :: handle(:)
 
     ! Read rules and molecule from input
     lines = read_strings(file)
     nrule = size(lines)-2
-    allocate(rules(nrule))
+    allocate(rules(nrule), revrules(nrule))
     if (lines(nrule+1)%str /= '') error stop 'day 19 - empty line expected'
     do i=1,nrule
       rules(i) = rule_parse(lines(i)%str)
+      revrules(i)%src = rules(i)%dst
+      revrules(i)%dst = rules(i)%src
     end do
     associate (init_str => lines(nrule+2)%str)
       if (len(init_str)>MAX_COMPOUND_LEN) error stop 'day 19 -increase MAX_COMPOUND_LEN'
@@ -82,7 +84,50 @@ contains
     call tree%Removeall()
     if (counter /= 0) error stop 'day 19 - leeking memory check fail'
 
+    ! Part 2
+    call bws(molecule, revrules, ans2)
+    print '("Answer 19/2 ",i0,l2)', ans2, ans2==212
+
   end subroutine day1519
+
+
+
+  recursive subroutine bws(str, rules, nsteps)
+    character(len=*), intent(in) :: str
+    type(rule_t), intent(in) :: rules(:)
+    integer, intent(out) :: nsteps
+!
+! Deep-wide search. We end as soon as any solution is found.
+! TODO: Seems that only one solution exists, but can not proove.
+!
+    integer :: i, j, nsteps1
+    character(len=MAX_COMPOUND_LEN) :: reduced
+    
+    if (str=='e') then
+      nsteps = 0
+      return
+    end if
+
+    nsteps = huge(nsteps)
+    RLOOP: do j=1, size(rules)
+      i = 0
+      do
+        i = get_index_forward(str, rules(j), i)
+        if (i==0) exit
+        reduced = trim(substitute_pattern(str, rules(j), i))
+!print *, 'rule ',j,len_trim(reduced), trim(reduced)
+        call bws(reduced, rules, nsteps1)
+        nsteps = min(nsteps, nsteps1)
+        ! End if ANY solution has been found
+        if (nsteps1 /= huge(nsteps)) exit RLOOP
+      end do
+    end do RLOOP
+    if (nsteps /= huge(nsteps)) then
+      nsteps = nsteps + 1
+    else
+print *, 'no luck - this line is never run'
+    end if
+  end subroutine bws
 
 
 
