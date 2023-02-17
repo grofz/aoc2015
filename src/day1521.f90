@@ -99,27 +99,33 @@ contains
     !
     mincost = huge(cost)
     maxcost = -1
-    do i=1,5
+    do i = 1,5
       state%wid = i
-      do j=1,5
+      do j = 1,5
         state%aid = j
+
         do k = 0, 2**6 - 1
           do m = 0, 5
-          state%rings(m+1) = btest(k, m)
+            state%rings(m+1) = btest(k, m)
           end do
-
+          ! 0, 1 or 2 rings can be used
           if (.not. state_isvalid(state)) cycle
+
           call state%getstats(dam, arm, cost)
+
+          ! Ignore if the selection does not meet required dam/arm
           if (maxx0) then
             if (dam > req_dam .or. arm > req_arm) cycle
           else
             if (dam < req_dam .or. arm < req_arm) cycle
           end if
+
           if (cost<mincost) mincost = cost
           if (cost>maxcost) maxcost = cost
         end do
       end do
     end do
+
     ! switch return value for Part 2 mode
     if (maxx0) mincost = maxcost
 
