@@ -2,6 +2,7 @@ module day1522_mod
   implicit none
 
   integer, parameter :: ID_PLAYER=1, ID_BOSS=2, NO_OF_EFFECTS=5
+  integer, parameter :: MAX_MOVES = 100
 
   type character_t
     integer :: hp, dam=0, arm=0, mana=0
@@ -15,6 +16,7 @@ module day1522_mod
     integer :: heal=0
     integer :: mana=0
     integer :: arm=0
+    character(len=3) :: str
   end type
 
   type state_t
@@ -22,6 +24,7 @@ module day1522_mod
     type(effect_t) :: effects(NO_OF_EFFECTS)
     integer :: mana_spent=0 
     logical :: hard_difficulty=.false.
+    integer :: nm=0, moves(MAX_MOVES)
   contains
     procedure, private :: state_less_than
     generic :: operator(<) => state_less_than
@@ -33,25 +36,39 @@ contains
     integer, intent(in) :: boss_hp, boss_dam
 
     integer, parameter :: PLAYER_HP = 50, PLAYER_MANA = 500
-    type(state_t) :: init_state
+    type(state_t) :: init_state, order1, order2
     integer :: ans1, ans2
 
     init_state%characters(ID_PLAYER) = character_t(hp=PLAYER_HP, mana=PLAYER_MANA)
     init_state%characters(ID_BOSS) = character_t(hp=boss_hp, dam=boss_dam)
     init_state%effects = effects_init()
 
-    call process_states(init_state, ans1)
+    call process_states(init_state, ans1, order1)
+    call print_order(order1)
     print '("Answer 22/1 ",i0,l2)', ans1, ans1==1824
 
     init_state%hard_difficulty = .true.
-    call process_states(init_state, ans2)
-    print '("Answer 22/1 ",i0,l2)', ans2, ans2==1937
+    call process_states(init_state, ans2, order2)
+    call print_order(order2)
+    print '("Answer 22/2 ",i0,l2)', ans2, ans2==1937
+  
+  contains
+    subroutine print_order(order)
+      type(state_t) :: order
+      integer :: i
+      do i=1, order%nm
+        write(*,'(a3,1x)',advance='no') order%effects(order%moves(i))%str
+      end do
+      write(*,'("mspend ",i0,"  hp ",i0,"  mana ",i0)') &
+      & order%mana_spent, order%characters(ID_PLAYER)%hp, order%characters(ID_PLAYER)%mana
+    end subroutine
   end subroutine day1522
 
 
-  subroutine process_states(init_state, best)
+  subroutine process_states(init_state, best, best_order)
     type(state_t), intent(in) :: init_state
     integer, intent(out) :: best
+    type(state_t), intent(out) :: best_order
 
     type(state_t), allocatable :: states(:)
     type(state_t) :: current, new
@@ -79,7 +96,10 @@ cnt = cnt+1
 
       call one_round(current%characters, current%effects, ID_PLAYER, ires)
       if (ires /= 0) then
-        if (ires==ID_PLAYER .and. current%mana_spent < best) best = current%mana_spent
+        if (ires==ID_PLAYER .and. current%mana_spent < best) then
+          best = current%mana_spent
+          best_order = current
+        end if
         cycle
       end if
 
@@ -97,6 +117,8 @@ cnt = cnt+1
         new%effects(i)%timer = new%effects(i)%timer_start
         new%characters(ID_PLAYER)%mana = new%characters(ID_PLAYER)%mana - new%effects(i)%cost
         new%mana_spent = new%mana_spent + new%effects(i)%cost
+        new%nm = new%nm+1
+        new%moves(new%nm)=i
         call one_round(new%characters, new%effects, ID_BOSS, ires)
 
         if (ires==0) then
@@ -104,6 +126,7 @@ cnt = cnt+1
           if (new%mana_spent < best) call add_state(states, ns, new)
         else if (ires==ID_PLAYER .and. new%mana_spent < best) then
           best = new%mana_spent
+          best_order = new
         end if
       end do
 
@@ -207,15 +230,15 @@ cnt = cnt+1
     type(effect_t) :: effects(NO_OF_EFFECTS)
 
     ! Magick Missile
-    effects(1) = effect_t(cost=53, timer_start=1, damage=4)
+    effects(1) = effect_t(cost=53, timer_start=1, damage=4, str='MIS')
     ! Drain
-    effects(2) = effect_t(cost=73, timer_start=1, damage=2, heal=2)
+    effects(2) = effect_t(cost=73, timer_start=1, damage=2, heal=2, str='DRA')
     ! Shield
-    effects(3) = effect_t(cost=113, timer_start=6, arm=7)
+    effects(3) = effect_t(cost=113, timer_start=6, arm=7, str='SHL')
     ! Poisson
-    effects(4) = effect_t(cost=173, timer_start=6, damage=3)
+    effects(4) = effect_t(cost=173, timer_start=6, damage=3, str='POI')
     ! Recharge
-    effects(5) = effect_t(cost=229, timer_start=5, mana=101)
+    effects(5) = effect_t(cost=229, timer_start=5, mana=101, str='REG')
   end function effects_init
 
 end module day1522_mod
