@@ -23,9 +23,10 @@ contains
       if (ans2==0 .and. hash(1:6)=='000000') then
         ans2 = i
       end if
-      if (mod(i,100000)==0) print *, i
+      if (mod(i,100000)==0) write(*,'(a)',advance='no') '.'
       if (ans1/=0 .and. ans2/=0) exit
     end do
+    write(*,*)
     if (i==MAX_TRY+1) error stop 'day 4 - not found'
     print '("Answer 4/1 ",i0,l2)', ans1, ans1==117946
     print '("Answer 4/2 ",i0,l2)', ans2, ans2==3938038
