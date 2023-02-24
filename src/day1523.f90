@@ -107,7 +107,8 @@ contains
     type(string_t), allocatable :: toks(:)
 
     call split(str, ' ', toks)
-    new%op = findloc(CHOP_TEXT, toks(1)%str, dim=1)
+   !new%op = findloc(CHOP_TEXT, toks(1)%str(1:3), dim=1)
+    new%op = findloc_local(CHOP_TEXT, toks(1)%str(1:3), dim=1)
     if (new%op==0) error stop 'instruction_fromstr - uknown instruction'
 
     select case(new%op)
@@ -151,6 +152,18 @@ contains
       read(locstr, *, iostat=ios) arg
       if (ios/=0) error stop 'get_argument - reading error'
     end function get_argument
+
+
+    integer function findloc_local(arr, str, dim) result(j)
+      character(len=3), intent(in) :: arr(:)
+      character(len=*), intent(in) :: str
+      integer, intent(in), optional :: dim ! not used
+
+      do j=1,size(arr,1)
+        if (arr(j)==str) exit
+      end do
+      if (j==size(arr,1)+1) j=0
+    end function
 
   end function instruction_fromstr
 

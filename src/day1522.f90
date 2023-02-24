@@ -73,15 +73,17 @@ contains
     type(state_t), allocatable :: states(:)
     type(state_t) :: current, new
     integer :: ns, i, ires
-integer :: cnt
+integer :: cnt, maxstates
 
     best = huge(best)
     call add_state(states, ns, init_state)
 cnt = 0
+maxstates = 0
 
     MAINLOOP: do
+if (ns>maxstates) maxstates = ns
       if (ns==0) exit
-cnt = cnt+1
+!cnt = cnt+1
       current = states(1)
       states(1:ns-1) = states(2:ns) 
       ns = ns - 1
@@ -123,7 +125,10 @@ cnt = cnt+1
 
         if (ires==0) then
           ! Game continues / Drop if worse than already best solution
-          if (new%mana_spent < best) call add_state(states, ns, new)
+          if (new%mana_spent < best) then
+            call add_state(states, ns, new)
+cnt = cnt+1
+          end if
         else if (ires==ID_PLAYER .and. new%mana_spent < best) then
           best = new%mana_spent
           best_order = new
@@ -131,7 +136,7 @@ cnt = cnt+1
       end do
 
     end do MAINLOOP
-!print *, 'counter =',cnt
+print *, 'counter =',cnt, maxstates
   end subroutine process_states
 
 
@@ -149,6 +154,7 @@ cnt = cnt+1
       ns = 0
     end if
     if (ns >= size(states)) then
+print *, 'reallocation', ns
       allocate(wrk(2*size(states)))
       wrk(1:ns) = states(1:ns)
       call move_alloc(wrk, states)
@@ -171,7 +177,7 @@ cnt = cnt+1
     class(state_t), intent(in) :: a, b
 
 ! Makes DWS / BWS switch (DWS seems working the best)
-!res = .true.
+!res = .false.
 !return
     !
     ! Prioritize states with lowest boss's hp
